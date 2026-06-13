@@ -7,13 +7,18 @@ const productrouter = require("./routes/Productroutes");
 const Bagroutes = require("./routes/Bagroutes");
 const Wishlistroutes = require("./routes/Wishlistroutes");
 const OrderRoutes = require("./routes/OrderRoutes");
+const recentlyViewedRoute = require("./routes/recentlyViewed");
+const cors = require('cors');
 dotenv.config()
 const dns = require("node:dns/promises");
 
 dns.setServers(["1.1.1.1"]);
 const app = express();
 app.use(express.json());
-
+app.use(cors({
+  origin: '*', 
+  credentials: true, 
+}));
 app.get('/', (req, res) => {
     res.send("✅Myntra backend in working")
 })
@@ -23,6 +28,7 @@ app.use("/product", productrouter);
 app.use("/bag", Bagroutes);
 app.use("/wishlist", Wishlistroutes);
 app.use("/Order", OrderRoutes);
+app.use("/recently-viewed", recentlyViewedRoute);
 mongoose.connect(process.env.MONGO_URI, {
 }).then(() => {
     console.log("Mongodb connected");

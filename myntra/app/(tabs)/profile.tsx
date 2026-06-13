@@ -18,6 +18,7 @@ import {
 } from "lucide-react-native";
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const menuItems = [
   { icon: Package, label: "Orders", route: "/orders" },
@@ -40,6 +41,7 @@ export default function Profile() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
+          <ThemeToggle />
         </View>
         <View style={styles.emptyState}>
           <User size={64} color="#ff3f6c" />

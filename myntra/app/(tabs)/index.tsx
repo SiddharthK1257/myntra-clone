@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { Search, ChevronRight } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios";
 
  const categories = [
@@ -99,7 +100,19 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [product, setproduct] = useState<any>(null);
   const [categories, setcategories] = useState<any>(null);
+  const [recentProducts, setRecentProducts] = useState<any[]>([]);
   const { user } = useAuth();
+  const loadRecentProducts = async () => {
+    try {
+      const data = await AsyncStorage.getItem("recentlyViewed");
+
+      if (data) {
+        setRecentProducts(JSON.parse(data));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleProductPress = (productId: number) => {
     if (!user) {
       router.push("/login");
@@ -123,6 +136,7 @@ export default function Home() {
       }
     };
     fetchproduct();
+    loadRecentProducts();
   }, []);
   return (
     <ScrollView style={styles.container}>
@@ -236,6 +250,36 @@ export default function Home() {
           )}
         </View>
       </View>
+       <View style={styles.section}>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>RECENTLY VIEWED</Text>
+    </View>
+
+    <View style={styles.productsGrid}>
+      {recentProducts.map((item: any) => (
+        <TouchableOpacity
+          key={item._id}
+          style={styles.productCard}
+          onPress={() => handleProductPress(item._id)}
+        >
+          <Image
+            source={{ uri: item.images[0] }}
+            style={styles.productImage}
+          />
+
+          <View style={styles.productInfo}>
+            <Text style={styles.brandName}>{item.brand}</Text>
+            <Text style={styles.productName}>{item.name}</Text>
+
+            <View style={styles.priceRow}>
+              <Text style={styles.productPrice}>₹{item.price}</Text>
+              <Text style={styles.discount}>{item.discount}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  </View>
     </ScrollView>
   );
 }

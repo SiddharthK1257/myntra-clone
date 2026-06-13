@@ -13,6 +13,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Heart, ShoppingBag } from "lucide-react-native";
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 // Mock product data - in a real app, this would come from an API
@@ -90,8 +92,29 @@ export default function ProductDetails() {
   const scrollViewRef = useRef<ScrollView>(null);
   const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [product, setproduct] = useState<any>(null);
   const [iswishlist, setiswishlist] = useState(false);
+  const saveRecentlyViewed = async (product: any) => {
+    try {
+      const existing = await AsyncStorage.getItem("recentlyViewed");
+
+      let items = existing ? JSON.parse(existing) : [];
+
+      items = items.filter((item: any) => item._id !== product._id);
+
+      items.unshift(product);
+
+      items = items.slice(0, 10);
+
+      await AsyncStorage.setItem(
+        "recentlyViewed",
+        JSON.stringify(items)
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
     // Simulate loading time
 
@@ -102,6 +125,7 @@ export default function ProductDetails() {
           `https://myntra-clone-pp8m.onrender.com/product/${id}`
         );
         setproduct(product.data);
+        saveRecentlyViewed(product.data)
       } catch (error) {
         console.log(error);
         setIsLoading(false);
@@ -111,27 +135,6 @@ export default function ProductDetails() {
     };
     fetchproduct();
   }, []);
-
-  useEffect(() => {
-  const addToRecentlyViewed = async () => {
-    if (!user || !product) return;
-
-    try {
-      await axios.post(
-        "https://myntra-clone-pp8m.onrender.com/recently-viewed",
-        {
-          userId: user._id,
-          productId: product._id,
-        }
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  addToRecentlyViewed();
-}, [product, user]);
-
   useEffect(() => {
     // Start auto-scroll
     startAutoScroll();
@@ -229,7 +232,7 @@ export default function ProductDetails() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView>
         <View style={styles.carouselContainer}>
           <ScrollView
@@ -266,7 +269,9 @@ export default function ProductDetails() {
           <View style={styles.header}>
             <View>
               <Text style={styles.brand}>{product.brand}</Text>
-              <Text style={styles.name}>{product.name}</Text>
+              <Text style={[styles.name, { color: theme.text }]}>
+                {product.name}
+              </Text>
             </View>
             <TouchableOpacity
               style={styles.wishlistButton}
@@ -285,7 +290,9 @@ export default function ProductDetails() {
             <Text style={styles.discount}>{product.discount}</Text>
           </View>
 
-          <Text style={styles.description}>{product.description}</Text>
+          <Text style={[styles.description, { color: theme.secondaryText }]}>
+            {product.description}
+          </Text>
 
           <View style={styles.sizeSection}>
             <Text style={styles.sizeTitle}>Select Size</Text>
@@ -314,9 +321,20 @@ export default function ProductDetails() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: theme.background,
+            borderTopColor: theme.border,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.addToBagButton}
+          style={[
+            styles.addToBagButton,
+            { backgroundColor: theme.primary }
+          ]}
           onPress={handleAddToBag}
           disabled={loading}
         >
