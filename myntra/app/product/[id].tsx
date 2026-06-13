@@ -118,7 +118,7 @@ export default function ProductDetails() {
 
     try {
       await axios.post(
-        "https://myntra-clone-pp8m.onrender.com/api/recently-viewed",
+        "https://myntra-clone-pp8m.onrender.com/recently-viewed",
         {
           userId: user._id,
           productId: product._id,
