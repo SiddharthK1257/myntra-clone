@@ -23,7 +23,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/myntra-fav.webp"
+      "favicon": "./assets/images/myntra-fav.png"
     },
     "plugins": [
       "expo-router",
@@ -45,6 +45,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "33c65aae-25ba-4476-b915-d5b482fce591"
+      }
+    },
+    "owner": "siddharthk1257"
   }
 }

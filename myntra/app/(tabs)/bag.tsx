@@ -53,7 +53,7 @@ export default function Bag() {
       try {
         setIsLoading(true);
         const bag = await axios.get(
-          `http://10.56.179.252:5000/bag/${user._id}`
+          `https://myntra-clone-pp8m.onrender.com/bag/${user._id}`
         );
         setbag(bag.data);
       } catch (error) {
@@ -96,7 +96,7 @@ export default function Bag() {
   );
   const handledelete=async(itemid:any)=>{
     try {
-      await axios.delete(`http://10.56.179.252:5000/bag/${itemid}`)
+      await axios.delete(`https://myntra-clone-pp8m.onrender.com/bag/${itemid}`)
       fetchproduct();
     } catch (error) {
       console.log(error)

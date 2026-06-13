@@ -99,7 +99,7 @@ export default function ProductDetails() {
       try {
         setIsLoading(true);
         const product = await axios.get(
-          `http://10.56.179.252:5000/product/${id}`
+          `https://myntra-clone-pp8m.onrender.com/product/${id}`
         );
         setproduct(product.data);
       } catch (error) {
@@ -111,6 +111,26 @@ export default function ProductDetails() {
     };
     fetchproduct();
   }, []);
+
+  useEffect(() => {
+  const addToRecentlyViewed = async () => {
+    if (!user || !product) return;
+
+    try {
+      await axios.post(
+        "https://myntra-clone-pp8m.onrender.com/api/recently-viewed",
+        {
+          userId: user._id,
+          productId: product._id,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  addToRecentlyViewed();
+}, [product, user]);
 
   useEffect(() => {
     // Start auto-scroll
@@ -150,7 +170,7 @@ export default function ProductDetails() {
     }
 
     try {
-      await axios.post(`http://10.56.179.252:5000/wishlist`, {
+      await axios.post(`https://myntra-clone-pp8m.onrender.com/wishlist`, {
         userId: user._id,
         productId: id,
       });
@@ -173,7 +193,7 @@ export default function ProductDetails() {
     }
     try {
       setLoading(true);
-      await axios.post(`http://10.56.179.252:5000/bag`, {
+      await axios.post(`https://myntra-clone-pp8m.onrender.com/bag`, {
         userId: user._id,
         productId: id,
         size: selectedSize,
