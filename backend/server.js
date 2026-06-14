@@ -8,7 +8,12 @@ const Bagroutes = require("./routes/Bagroutes");
 const Wishlistroutes = require("./routes/Wishlistroutes");
 const OrderRoutes = require("./routes/OrderRoutes");
 const recentlyViewedRoute = require("./routes/recentlyViewed");
+const tokenRoute = require("./routes/token");
+const exportRoutes = require("./routes/exportRoutes")
+const transactionRoutes = require("./routes/transactionRoutes")
+const webhookRoutes = require("./routes/webhookRoutes");
 const cors = require('cors');
+require("./cartReminder");
 dotenv.config()
 const dns = require("node:dns/promises");
 
@@ -29,6 +34,10 @@ app.use("/bag", Bagroutes);
 app.use("/wishlist", Wishlistroutes);
 app.use("/Order", OrderRoutes);
 app.use("/recently-viewed", recentlyViewedRoute);
+app.use("/api/token", tokenRoute);
+app.use("/api/export", exportRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/webhook", webhookRoutes);
 mongoose.connect(process.env.MONGO_URI, {
 }).then(() => {
     console.log("Mongodb connected");

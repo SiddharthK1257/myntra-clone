@@ -6,7 +6,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 import "react-native-reanimated";
-
+import axios from "axios";
+import { registerForPushNotificationsAsync } from "@/utils/notifications";
 import React from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -23,7 +24,26 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-
+//  useEffect(() => {
+//  async function saveToken() {
+//    const token = await registerForPushNotificationsAsync();
+//
+//    if (token) {
+//      try {
+//        await axios.post(
+//          "https://myntra-clone-pp8m.onrender.com/api/token",
+//          { token }
+//        );
+//
+//        console.log("Token saved successfully");
+//      } catch (error) {
+//        console.log("Error saving token:", error);
+//      }
+//    }
+//  }
+//
+//  saveToken();
+//}, []);
   if (!loaded) {
     return null;
   }

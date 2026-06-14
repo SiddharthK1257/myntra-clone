@@ -1,4 +1,5 @@
 const express = require("express");
+const sendNotification = require("../sendNotification");
 const Bag = require("../models/Bag");
 const Order = require("../models/Order");
 const router = express.Router();
@@ -65,10 +66,15 @@ router.post("/create/:userId", async (req, res) => {
       item: orderitem,
       total: total,
       shippingAddress: req.body.shippingAddress,
-      paymentMethod:req.body.paymentMethod,
+      paymentMethod: req.body.paymentMethod,
       tracking: genrateRandomTracking(),
     });
     await newOrder.save();
+    await sendNotification(
+      userToken,
+      "Order Placed",
+      "Your order has been placed successfully"
+    );
     await Bag.deleteMany({ userId: userid });
     res.status(200).json({ message: "Order placed successfully" });
   } catch (error) {
