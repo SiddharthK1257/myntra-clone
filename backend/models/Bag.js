@@ -2,24 +2,41 @@ const mongoose = require("mongoose");
 
 const BagItemSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-    size: String,
-    quantity: Number,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-    // For Save For Later feature
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+
+    size: {
+      type: String,
+      default: "",
+    },
+
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+
     savedForLater: {
       type: Boolean,
       default: false,
     },
 
-    // Store price when product was added
     priceAtAddition: {
       type: Number,
       default: 0,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("Bag", BagItemSchema);

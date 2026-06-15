@@ -1,96 +1,135 @@
 const express = require("express");
-const sendNotification = require("../sendNotification");
+const router = express.Router();
+
 const Bag = require("../models/Bag");
 const Order = require("../models/Order");
-const router = express.Router();
-const mongoose = require("mongoose");
 
-function genrateRandomTracking() {
+function generateRandomTracking() {
   const carriers = ["Delhivery", "Bluedart", "Ecom Express", "XpressBees"];
-  const statusOptions = [
+  const statuses = [
     "Shipped",
     "Out for Delivery",
     "Delivered",
     "In Transit",
   ];
-  const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune"];
-  const randomcarrier = carriers[Math.floor(Math.random() * carriers.length)];
-  const randomstatusOptions =
-    statusOptions[Math.floor(Math.random() * statusOptions.length)];
-  const randomlocations =
+  const locations = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Hyderabad",
+    "Pune",
+  ];
+
+  const carrier =
+    carriers[Math.floor(Math.random() * carriers.length)];
+
+  const status =
+    statuses[Math.floor(Math.random() * statuses.length)];
+
+  const location =
     locations[Math.floor(Math.random() * locations.length)];
 
   return {
     number: "TRK" + Math.floor(Math.random() * 10000000),
-    carrier: randomcarrier,
+    carrier,
     estimatedDelivery: new Date(
       Date.now() + 5 * 24 * 60 * 60 * 1000
-    ).toISOString(),
-    currentLocation: randomlocations,
-    status: randomstatusOptions,
+    ),
+    currentLocation: location,
+    status,
     timeline: [
       {
-        status: "Order placed",
+        status: "Order Placed",
         location: "Warehouse",
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(),
       },
       {
-        status: randomstatusOptions,
-        location: randomlocations,
-        timestamp: new Date().toISOString(),
+        status,
+        location,
+        timestamp: new Date(),
       },
     ],
   };
 }
+
+// Create Order
 router.post("/create/:userId", async (req, res) => {
   try {
-    const userid = req.params.userId;
-    const bag = await Bag.find({ userId: userid }).populate("productId");
+    const userId = req.params.userId;
+
+    const bag = await Bag.find({
+      userId,
+      savedForLater: false,
+    }).populate("productId");
+
     if (bag.length === 0) {
-      return res.status(400).json({ message: "No item in the bag" });
+      return res.status(400).json({
+        success: false,
+        message: "No items in the bag",
+      });
     }
-    const orderitem = bag.map((item) => ({
+
+    const orderItems = bag.map((item) => ({
       productId: item.productId._id,
       size: item.size,
-      price: item.productId.price,
       quantity: item.quantity,
+      price: item.productId.price,
     }));
-    const total = orderitem.reduce(
-      (sum, item) => sum + item.price + item.quantity,
+
+    const total = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
+
     const newOrder = new Order({
-      userId: userid,
-      date: new Date().toISOString(),
+      userId,
+      date: new Date(),
       status: "Processing",
-      item: orderitem,
-      total: total,
+      item: orderItems,
+      total,
       shippingAddress: req.body.shippingAddress,
       paymentMethod: req.body.paymentMethod,
-      tracking: genrateRandomTracking(),
+      tracking: generateRandomTracking(),
     });
+
     await newOrder.save();
-    await sendNotification(
-      userToken,
-      "Order Placed",
-      "Your order has been placed successfully"
-    );
-    await Bag.deleteMany({ userId: userid });
-    res.status(200).json({ message: "Order placed successfully" });
+
+    await Bag.deleteMany({
+      userId,
+      savedForLater: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Order placed successfully",
+      order: newOrder,
+    });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Something went wrong" });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 });
-router.get("/user/:userid", async (req, res) => {
+
+// Get User Orders
+router.get("/user/:userId", async (req, res) => {
   try {
-    const order = await Order.find({ userId: req.params.userid }).populate(
-      "items.productId"
-    );
-    res.status(200).json(order);
+    const orders = await Order.find({
+      userId: req.params.userId,
+    }).populate("item.productId");
+
+    res.status(200).json(orders);
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Something went wrong" });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 });
+
 module.exports = router;

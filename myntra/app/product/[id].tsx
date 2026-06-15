@@ -184,31 +184,45 @@ export default function ProductDetails() {
     }
   };
   const handleAddToBag = async () => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+  if (!user) {
+    router.push("/login");
+    return;
+  }
 
-    if (!selectedSize) {
-      // In a real app, show a proper error message
-      alert("Please select a size");
-      return;
-    }
-    try {
-      setLoading(true);
-      await axios.post(`https://myntra-clone-pp8m.onrender.com/bag`, {
+  if (!selectedSize) {
+    alert("Please select a size");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await axios.post(
+      "https://myntra-clone-pp8m.onrender.com/api/cart/add",
+      {
         userId: user._id,
-        productId: id,
+        productId: product._id,
         size: selectedSize,
-        quantity: 1,
-      });
-      router.push("/bag");
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-    // In a real app, this would add the item to the cart in your state management solution
+      }
+    );
+
+    console.log("Success:", response.data);
+
+    router.push("/bag");
+  } catch (error: any) {
+    console.log("AXIOS ERROR:");
+    console.log(error.response?.data);
+    console.log(error.message);
+
+    alert(
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong"
+    );
+  } finally {
+    setLoading(false);
+  }
+  // In a real app, this would add the item to the cart in your state management solution
   };
 
   const handleScroll = (event: any) => {

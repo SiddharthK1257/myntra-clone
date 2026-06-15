@@ -7,102 +7,87 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 
-const bagItems = [
-  {
-    id: 1,
-    name: "White Cotton T-Shirt",
-    brand: "H&M",
-    size: "L",
-    price: 799,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Blue Denim Jacket",
-    brand: "Levis",
-    size: "M",
-    price: 2999,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1523205771623-e0faa4d2813d?w=500&auto=format&fit=crop",
-  },
-];
-
 export default function Bag() {
   const router = useRouter();
-
-  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const [bag, setbag] = useState<any>(null);
+
+  const [bag, setBag] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
-    // Simulate loading time
-
-
-    fetchproduct();
+    fetchProducts();
   }, [user]);
-  const fetchproduct = async () => {
-    if (user) {
-      try {
-        setIsLoading(true);
-        const bag = await axios.get(
-          `https://myntra-clone-pp8m.onrender.com/cart/${user._id}`
-        );
-        setbag(bag.data);
-      } catch (error) {
-        console.log(error);
-        setIsLoading(false);
-      } finally {
-        setIsLoading(false);
+
+  const fetchProducts = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+
+      const response = await axios.get(
+        `https://myntra-clone-pp8m.onrender.com/api/cart/${user._id}`
+      );
+
+      console.log("Bag Response:", response.data);
+
+      if (Array.isArray(response.data)) {
+        setBag(response.data);
+      } else if (response.data.items) {
+        setBag(response.data.items);
+      } else {
+        setBag([]);
       }
+    } catch (error) {
+      console.log(error);
+      setBag([]);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleDelete = async (itemId: any) => {
+    try {
+      await axios.delete(
+        `https://myntra-clone-pp8m.onrender.com/bag/${itemId}`
+      );
+
+      fetchProducts();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const total = bag
+    .filter((item: any) => !item.savedForLater)
+    .reduce(
+      (sum: number, item: any) =>
+        sum + (item.productId?.price || 0) * item.quantity,
+      0
+    );
+
   if (!user) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Shopping Bag</Text>
-        </View>
-        <View style={styles.emptyState}>
-          <ShoppingBag size={64} color="#ff3f6c" />
-          <Text style={styles.emptyTitle}>Please login to view your bag</Text>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => router.push("/login")}
-          >
-            <Text style={styles.loginButtonText}>LOGIN</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.emptyState}>
+        <ShoppingBag size={60} color="#ff3f6c" />
+        <Text style={styles.emptyText}>Please login to view your bag</Text>
       </View>
     );
   }
+
   if (isLoading) {
     return (
-      <View style={styles.loaderContainer}>
+      <View style={styles.loader}>
         <ActivityIndicator size="large" color="#ff3f6c" />
       </View>
     );
   }
-  const total = bag?.filter((item: any) => !item.savedForLater).reduce(
-    (sum: any, item: any) => sum + item.productId.price * item.quantity,
-    0
-  );
-  const handledelete = async (itemid: any) => {
-    try {
-      await axios.delete(`https://myntra-clone-pp8m.onrender.com/bag/${itemid}`)
-      fetchproduct();
-    } catch (error) {
-      console.log(error)
-    }
 
-  }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -110,77 +95,85 @@ export default function Bag() {
       </View>
 
       <ScrollView style={styles.content}>
-        {bag?.filter((item: any) => !item.savedForLater).map((item: any) => (
-          <View key={item._id} style={styles.bagItem}>
-            <Image
-              source={{ uri: item.productId.images[0] }}
-              style={styles.itemImage}
-            />
-            <View style={styles.itemInfo}>
-              <Text style={styles.brandName}>{item.productId.brand}</Text>
-              <Text style={styles.itemName}>{item.productId.name}</Text>
-              <Text style={styles.itemSize}>Size: {item.size}</Text>
-              <Text style={styles.itemPrice}>₹{item.productId.price}</Text>
-
-              <View style={styles.quantityContainer}>
-                {/* Decrease Quantity */}
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={async () => {
-                    try {
-                      await axios.post(
-                        "https://myntra-clone-pp8m.onrender.com/api/cart/decrease",
-                        {
-                          userId: user._id,
-                          productId: item.productId._id,
-                        }
-                      );
-
-                      fetchproduct();
-                    } catch (error) {
-                      console.log(error);
-                    }
+        {bag.filter((item) => !item.savedForLater).length === 0 ? (
+          <View style={styles.emptyState}>
+            <ShoppingBag size={60} color="#ff3f6c" />
+            <Text style={styles.emptyText}>Your bag is empty</Text>
+          </View>
+        ) : (
+          bag
+            .filter((item) => !item.savedForLater)
+            .map((item: any) => (
+              <View key={item._id} style={styles.bagItem}>
+                <Image
+                  source={{
+                    uri:
+                      item.productId?.images?.[0] ||
+                      "https://via.placeholder.com/100",
                   }}
-                >
-                  <Minus size={20} color="#3e3e3e" />
-                </TouchableOpacity>
+                  style={styles.image}
+                />
 
-                <Text style={styles.quantity}>{item.quantity}</Text>
+                <View style={styles.info}>
+                  <Text style={styles.brand}>
+                    {item.productId?.brand}
+                  </Text>
 
-                {/* Increase Quantity */}
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={async () => {
-                    try {
-                      await axios.post(
-                        "https://myntra-clone-pp8m.onrender.com/api/cart/increase",
-                        {
-                          userId: user._id,
-                          productId: item.productId._id,
-                        }
-                      );
+                  <Text style={styles.name}>
+                    {item.productId?.name}
+                  </Text>
 
-                      fetchproduct();
-                    } catch (error) {
-                      console.log(error);
-                    }
-                  }}
-                >
-                  <Plus size={20} color="#3e3e3e" />
-                </TouchableOpacity>
+                  <Text style={styles.price}>
+                    ₹{item.productId?.price}
+                  </Text>
 
-                {/* Remove Item */}
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handledelete(item._id)}
-                >
-                  <Trash2 size={20} color="#ff3f6c" />
-                </TouchableOpacity>
+                  <View style={styles.quantityRow}>
+                    <TouchableOpacity
+                      onPress={async () => {
+                        await axios.post(
+                          "https://myntra-clone-pp8m.onrender.com/api/cart/decrease",
+                          {
+                            userId: user._id,
+                            productId: item.productId._id,
+                          }
+                        );
 
-                {/* Save For Later */}
-                <TouchableOpacity
-                  onPress={async () => {
-                    try {
+                        fetchProducts();
+                      }}
+                    >
+                      <Minus size={20} />
+                    </TouchableOpacity>
+
+                    <Text style={styles.quantity}>
+                      {item.quantity}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={async () => {
+                        await axios.post(
+                          "https://myntra-clone-pp8m.onrender.com/api/cart/increase",
+                          {
+                            userId: user._id,
+                            productId: item.productId._id,
+                          }
+                        );
+
+                        fetchProducts();
+                      }}
+                    >
+                      <Plus size={20} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{ marginLeft: 20 }}
+                      onPress={() => handleDelete(item._id)}
+                    >
+                      <Trash2 size={20} color="#ff3f6c" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={async () => {
                       await axios.post(
                         "https://myntra-clone-pp8m.onrender.com/api/cart/save",
                         {
@@ -189,100 +182,30 @@ export default function Bag() {
                         }
                       );
 
-                      fetchproduct();
-                    } catch (error) {
-                      console.log(error);
-                    }
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#ff3f6c",
-                      marginLeft: 15,
-                      fontWeight: "600",
+                      fetchProducts();
                     }}
                   >
-                    Save For Later
-                  </Text>
-                </TouchableOpacity>
-              </View></View></View>
-        ))}
+                    <Text style={styles.saveText}>
+                      Save For Later
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+        )}
       </ScrollView>
 
-      <Text
-        style={{
-          fontSize: 20,
-          fontWeight: "bold",
-          marginHorizontal: 15,
-          marginBottom: 10,
-        }}
-      >
-        Saved For Later
-      </Text>
-
-      {bag
-        ?.filter((item: any) => item.savedForLater)
-        .map((item: any) => (
-          <View key={item._id} style={styles.bagItem}>
-            <Image
-              source={{ uri: item.productId.images[0] }}
-              style={styles.itemImage}
-            />
-
-            <View style={styles.itemInfo}>
-              <Text style={styles.brandName}>
-                {item.productId.brand}
-              </Text>
-
-              <Text style={styles.itemName}>
-                {item.productId.name}
-              </Text>
-
-              <Text style={styles.itemPrice}>
-                ₹{item.productId.price}
-              </Text>
-
-              <TouchableOpacity
-                onPress={async () => {
-                  try {
-                    await axios.post(
-                      "https://myntra-clone-pp8m.onrender.com/api/cart/move",
-                      {
-                        userId: user._id,
-                        productId: item.productId._id,
-                      }
-                    );
-
-                    fetchproduct();
-                  } catch (error) {
-                    console.log(error);
-                  }
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#ff3f6c",
-                    marginTop: 10,
-                    fontWeight: "600",
-                  }}
-                >
-                  Move To Cart
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
       <View style={styles.footer}>
-        <View style={styles.totalContainer}>
+        <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount</Text>
           <Text style={styles.totalAmount}>₹{total}</Text>
         </View>
+
         <TouchableOpacity
-          style={styles.checkoutButton}
+          style={styles.button}
           onPress={() => router.push("/checkout")}
         >
-          <Text style={styles.checkoutButtonText}>PLACE ORDER</Text>
+          <Text style={styles.buttonText}>PLACE ORDER</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -290,148 +213,126 @@ export default function Bag() {
 }
 
 const styles = StyleSheet.create({
-  loaderContainer: {
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  loader: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+
   header: {
-    padding: 15,
     paddingTop: 50,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 20,
+    paddingBottom: 15,
   },
+
   headerTitle: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "bold",
-    color: "#3e3e3e",
   },
+
   content: {
     flex: 1,
     padding: 15,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    color: "#3e3e3e",
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  loginButton: {
-    backgroundColor: "#ff3f6c",
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 10,
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+
   bagItem: {
     flexDirection: "row",
     backgroundColor: "#fff",
     borderRadius: 10,
+    elevation: 4,
     marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: "hidden",
+    padding: 10,
   },
-  itemImage: {
+
+  image: {
     width: 100,
     height: 120,
+    borderRadius: 8,
   },
-  itemInfo: {
+
+  info: {
     flex: 1,
-    padding: 15,
+    paddingLeft: 15,
   },
-  brandName: {
+
+  brand: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 5,
+    color: "#777",
   },
-  itemName: {
+
+  name: {
     fontSize: 16,
-    color: "#3e3e3e",
-    marginBottom: 5,
+    marginTop: 4,
   },
-  itemSize: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 5,
-  },
-  itemPrice: {
-    fontSize: 16,
+
+  price: {
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#3e3e3e",
-    marginBottom: 10,
+    marginTop: 8,
   },
-  quantityContainer: {
+
+  quantityRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 12,
   },
-  quantityButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#f5f5f5",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   quantity: {
     marginHorizontal: 15,
     fontSize: 16,
   },
-  removeButton: {
-    marginLeft: "auto",
+
+  saveText: {
+    color: "#ff3f6c",
+    marginTop: 15,
+    fontWeight: "600",
   },
+
   footer: {
-    padding: 15,
-    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    borderColor: "#eee",
+    padding: 15,
   },
-  totalContainer: {
+
+  totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 15,
   },
+
   totalLabel: {
     fontSize: 16,
-    color: "#3e3e3e",
   },
+
   totalAmount: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#3e3e3e",
   },
-  checkoutButton: {
+
+  button: {
     backgroundColor: "#ff3f6c",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
   },
-  checkoutButtonText: {
+
+  buttonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  emptyText: {
+    marginTop: 15,
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
