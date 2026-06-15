@@ -60,7 +60,7 @@ import axios from "axios";
        "Activewear",
      ],
      image:
-       "https://images.unsplash.com/photo-1618244972963-dbad0c4abf18?w=500&auto=format&fit=crop",
+       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop",
      products: [
        {
          id: 3,
