@@ -1,6 +1,6 @@
 const Transaction = require("../models/Transaction");
 const AuditLog = require("../models/AuditLog");
-
+const generatePDF = require("../utils/generatePDF");
 exports.createTransaction = async(req,res)=>{
 
 try{
@@ -55,3 +55,27 @@ try{
     })
   }
 }
+
+exports.downloadReceipt = async (req, res) => {
+
+  try {
+
+    const transaction = await Transaction.findById(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({
+        message: "Transaction not found"
+      });
+    }
+
+    generatePDF(transaction, res);
+
+  } catch (err) {
+
+    res.status(500).json({
+      message: err.message
+    });
+
+  }
+
+};

@@ -3,11 +3,14 @@ const router = express.Router();
 
 const {
 createTransaction,
-getTransactions
+getTransactions,
+downloadReceipt
 } = require("../controllers/transactionController");
 
 router.post("/",createTransaction);
 
 router.get("/",getTransactions);
+
+router.get("/receipt/:id", downloadReceipt);
 
 module.exports=router;

@@ -12,6 +12,7 @@ const tokenRoute = require("./routes/token");
 const exportRoutes = require("./routes/exportRoutes")
 const transactionRoutes = require("./routes/transactionRoutes")
 const webhookRoutes = require("./routes/webhookRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 const cors = require('cors');
 require("./cartReminder");
 dotenv.config()
@@ -38,6 +39,7 @@ app.use("/api/token", tokenRoute);
 app.use("/api/export", exportRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/webhook", webhookRoutes);
+app.use("/api/cart", cartRoutes);
 mongoose.connect(process.env.MONGO_URI, {
 }).then(() => {
     console.log("Mongodb connected");
