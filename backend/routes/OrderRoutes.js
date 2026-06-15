@@ -115,13 +115,19 @@ router.post("/create/:userId", async (req, res) => {
 });
 
 // Get User Orders
-router.get("/user/:userId", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const orders = await Order.find({
-      userId: req.params.userId,
-    }).populate("item.productId");
+    const order = await Order.findById(req.params.id)
+      .populate("items.productId");
 
-    res.status(200).json(orders);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json(order);
   } catch (error) {
     console.log(error);
 

@@ -17,33 +17,21 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
-  const handleplaceorder = async () => {
-  if (!user) {
-    router.push("/login");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await axios.post(
-      `https://myntra-clone-pp8m.onrender.com/order/create/${user._id}`,
-      {
+  const handleplaceorder = async() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    try {
+      await axios.post(`https://myntra-clone-pp8m.onrender.com/order/create/${user._id}`, {
         shippingAddress: "123 Main Street, Apt 4B, New York, NY, 10001",
         paymentMethod: "Card",
-      }
-    );
+      });
+      router.push("/orders");
+    } catch (error) {
+      console.log(error);
+    }
 
-    console.log("ORDER SUCCESS:", response.data);
-
-    router.push("/orders");
-  } catch (error: any) {
-    console.log("STATUS:", error.response?.status);
-    console.log("DATA:", error.response?.data);
-    console.log("MESSAGE:", error.message);
-  } finally {
-    setLoading(false);
-  }
     
   };
   return (
