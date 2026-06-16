@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  ActivityIndicator,
+  ActivityIndicator,  ScrollView
 } from "react-native";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -33,7 +33,7 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
       <Image
         source={{
           uri: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
@@ -89,7 +89,7 @@ export default function Login() {
           <Text style={styles.signupText}>Dont have an account? Sign Up</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -100,19 +100,18 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: "50%",
+    height: "300%",
     position: "absolute",
     top: 0,
   },
   formContainer: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    marginTop: "60%",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
+  flex: 1,
+  backgroundColor: "#fff",
+  padding: 20,
+  marginTop: -30,
+  borderTopLeftRadius: 30,
+  borderTopRightRadius: 30,
+},
   title: {
     fontSize: 28,
     fontWeight: "bold",
